@@ -69,16 +69,29 @@ def to_tikz_feynman(structure):
             else:
                 lines.append(fr"{current_v} -- [{p['style']}, edge label{label_side}=\({p['label']}\)] {node}")
         elif isinstance(struct, list):
-            # Si c'est une cascade de la forme [[parent], [enfants...]]
+            # Si c'est une cascade de la forme [[parent], [branches...]]
             if (
                 len(struct) == 2
                 and isinstance(struct[0], list) and len(struct[0]) == 1 and isinstance(struct[0][0], str)
                 and isinstance(struct[1], list)
             ):
                 parent_info = get_particle_info(struct[0][0])
-                parent_v = v_manager.new_v()
-                lines.append(fr"{current_v} -- [{parent_info['style']}, edge label=\({parent_info['label']}\)] {parent_v}")
-                process_cascade(parent_v, struct[1])
+                # Si plusieurs branches, on crée un vertex intermédiaire
+                if len(struct[1]) > 1:
+                    parent_v = v_manager.new_v()
+                    lines.append(fr"{current_v} -- [{parent_info['style']}, edge label=\({parent_info['label']}\)] {parent_v}")
+                    for branch in struct[1]:
+                        process_cascade(parent_v, branch)
+                # Si une seule branche, on relie directement sans vertex intermédiaire
+                elif len(struct[1]) == 1:
+                    lines.append(fr"{current_v} -- [{parent_info['style']}, edge label=\({parent_info['label']}\)] ", end='')
+                    # On continue la chaîne sur la même ligne
+                    # On génère le nom du prochain vertex ou nœud final dans la branche
+                    # On crée un vertex temporaire pour la suite
+                    next_v = v_manager.new_v()
+                    print_str = lines.pop()
+                    lines.append(print_str + f"{next_v}")
+                    process_cascade(next_v, struct[1][0])
             else:
                 # Liste de particules ou de cascades, toutes rattachées au vertex courant
                 for item in struct:

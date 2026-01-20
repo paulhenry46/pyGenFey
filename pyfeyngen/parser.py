@@ -1,7 +1,7 @@
 import re
 
 def parse_reaction(reaction_str):
-    # Nouvelle version : parsing récursif pour cascades complexes
+    # Parsing récursif robuste pour cascades et branches multiples
     def recursive_parse(s):
         s = s.strip()
         # Si la chaîne commence par une parenthèse, on extrait le bloc
@@ -15,7 +15,32 @@ def parse_reaction(reaction_str):
             elif c == '>' and depth == 0:
                 left = s[:i].strip()
                 right = s[i+1:].strip()
-                return [recursive_parse(left)] + [recursive_parse(right)]
+                # On parse la partie gauche (entrée ou parent)
+                left_parsed = recursive_parse(left)
+                # On parse la partie droite (peut contenir plusieurs branches)
+                # On découpe la droite en tokens principaux (hors parenthèses)
+                tokens = []
+                buf = ''
+                d = 0
+                for ch in right:
+                    if ch == '(':
+                        d += 1
+                    elif ch == ')':
+                        d -= 1
+                    if ch == ' ' and d == 0:
+                        if buf.strip():
+                            tokens.append(buf.strip())
+                        buf = ''
+                    else:
+                        buf += ch
+                if buf.strip():
+                    tokens.append(buf.strip())
+                # On parse chaque branche, on ignore les branches vides
+                right_parsed = [recursive_parse(tok) for tok in tokens if tok]
+                # Si une seule branche, on évite la liste inutile
+                if len(right_parsed) == 1:
+                    right_parsed = right_parsed[0]
+                return [left_parsed, right_parsed]
         # Si pas de '>' au niveau racine, on split par espaces hors parenthèses
         tokens = []
         buf = ''
@@ -31,13 +56,14 @@ def parse_reaction(reaction_str):
                 buf += c
         if buf:
             tokens.append(buf)
-        # Si un token contient un '>' (sous-réaction), on le parse récursivement
-        result = []
-        for t in tokens:
-            if '>' in t:
-                result.append(recursive_parse(t))
-            else:
-                result.append(t)
-        return result
+        return tokens
 
-    return recursive_parse(reaction_str)
+    def clean_empty_branches(tree):
+        if isinstance(tree, list):
+            # On filtre les sous-listes vides ou contenant uniquement des sous-listes vides
+            cleaned = [clean_empty_branches(x) for x in tree if x != []]
+            # On retire les branches qui sont devenues vides
+            return [x for x in cleaned if x != []]
+        return tree
+
+    return clean_empty_branches(recursive_parse(reaction_str))
