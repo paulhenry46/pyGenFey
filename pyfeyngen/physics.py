@@ -1,34 +1,17 @@
-from particle import Particle, PDGID
+# physics.py
 
-def get_particle_info(name):
-    try:
-        # Recherche robuste
-        p = Particle.findall(name)[0]
-        id = p.pdgid
-        
-        style = "plain"
-        
-        # On utilise les fonctions de vérification du PDGID (plus fiable)
-        if id.is_lepton or id.is_quark:
-            style = "fermion"
-        elif id == 22: # Photon
-            style = "photon"
-        elif abs(id) in [23, 24]: # Z or W
-            style = "boson"
-        elif id == 21: # Gluon
-            style = "gluon"
-        elif id.is_hadron:
-            style = "dashed"
+PARTICLES = {
+    'e-':    {'style': 'fermion', 'label': 'e^{-}', 'is_anti': False},
+    'e+':    {'style': 'fermion', 'label': 'e^{+}', 'is_anti': True},
+    'mu-':   {'style': 'fermion', 'label': '\\mu^{-}', 'is_anti': False},
+    'mu+':   {'style': 'fermion', 'label': '\\mu^{+}', 'is_anti': True},
+    'u':     {'style': 'fermion', 'label': 'u',         'is_anti': False},
+    'ubar':  {'style': 'fermion', 'label': '\\bar{u}',  'is_anti': True},
+    'Z0':    {'style': 'boson',   'label': 'Z^{0}',    'is_anti': False},
+    'gamma': {'style': 'photon',  'label': '\\gamma',   'is_anti': False},
+    'H':     {'style': 'plain',   'label': 'H^{0}',     'is_anti': False},
+}
 
-        return {
-            "label": p.latex_name,
-            "style": style,
-            "is_anti": id < 0,
-            "pdgid": int(id)
-        }
-    except Exception as e:
-        return {"label": name, "style": "plain", "is_anti": False, "error": str(e)}
-
-# Test
-print(get_particle_info("e+"))
-# Devrait enfin afficher : 'style': 'fermion', 'is_anti': True
+def get_info(name):
+    # Retourne les infos ou un style par défaut si inconnu
+    return PARTICLES.get(name, {'style': 'plain', 'label': name, 'is_anti': False})
