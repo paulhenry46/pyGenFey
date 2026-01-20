@@ -1,0 +1,14 @@
+\documentclass{standalone}
+\usepackage[compat=1.1.0]{tikz-feynman}
+\begin{document}
+\feynmandiagram [horizontal=vx1 to vx2] {
+  inx0 -- [fermion, edge label=\(u\)] vx1,
+  inx1 -- [plain, edge label=\(ubar\)] vx1,
+  vx1 -- [plain, edge label=\(H^{0}\)] vx2,
+  vx2 -- [boson, edge label=\(Z^{0}\)] vx3,
+  fx3x0 -- [fermion, edge label=\(e^{+}\)] vx3,
+  vx3 -- [plain, edge label'=\(e-) (Z0\)] fx3x1,
+  fx3x2 -- [fermion, edge label=\(\mu^{+}\)] vx3,
+  vx3 -- [fermion, edge label'=\(\mu^{-}\)] fx3x3
+};
+\end{document}
