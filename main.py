@@ -10,7 +10,9 @@ reactions = [
     'e- e- > [gamma gamma] > e- e-', # Valide avec Boucle
     'u ubar > H > (Z0 @link > e+ e-) (Z0 @link > mu+ mu-)',
     'u ubar > H > (Z0 @link > e+ e-) (Z0 > mu+ mu- @link)',
-    'u ubar @debut > H > (Z0 > e+ e-) (Z0 > mu+ mu-) @debut'
+    'u ubar @debut > H > (Z0 > e+ e-) (Z0 > mu+ mu-) @debut',
+    'u ubar @debut > H > (Z0 > e+ e-) (@debut Z0 > mu+ mu-)',
+    'e+ > (e- > @A > e-) (e- > @A > e-)'
 ]
 
 for r in reactions:

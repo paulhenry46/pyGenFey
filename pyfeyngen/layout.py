@@ -23,68 +23,61 @@ class FeynmanGraph:
         return f"fx{self.f_count}"
 
     def build_graph(self, structure):
-        # 1. Création du vertex d'entrée
         v_start = self.new_v()
-        for p in structure[0]:
+        
+        # On filtre pour ne garder que les noms de particules (str)
+        # u ubar @debut -> ['u', 'ubar']
+        in_particles = [p for p in structure[0] if isinstance(p, str)]
+        
+        # On enregistre les ancres d'entrée sur le vertex de départ
+        in_anchors = [p for p in structure[0] if isinstance(p, dict)]
+        for a in in_anchors:
+            self._register_anchor(v_start, a)
+
+        for p in in_particles:
             in_node = self.new_in()
             self.edges.append((in_node, v_start, p))
         
-        # 2. Construction récursive de l'arbre
         self._process_steps(v_start, structure[1:])
-        
-        # 3. Post-traitement : Soudure des ancres
         self._connect_anchors()
+        
 
     def _process_steps(self, current_v, steps):
         if not steps: return
         step = steps[0]
 
-        # --- GESTION DES BOUCLES [ ] ---
-        if isinstance(step[0], dict) and 'loop' in step[0]:
-            loop_particles = step[0]['loop']
-            v_loop_end = self.new_v()
-            for p in loop_particles:
-                self.edges.append((current_v, v_loop_end, p))
-            self._process_steps(v_loop_end, steps[1:])
+        # On sépare les ancres des particules réelles dans cette étape
+        particles = [item for item in step if isinstance(item, str) or isinstance(item, list)]
+        anchors = [item for item in step if isinstance(item, dict) and 'anchor' in item]
+
+        # On enregistre les ancres sur le vertex actuel
+        for a in anchors:
+            self._register_anchor(current_v, a)
+
+        # Si l'étape n'a plus de particules (seulement des ancres), on passe à la suite
+        if not particles:
+            self._process_steps(current_v, steps[1:])
             return
 
-        # --- GESTION DES BRANCHES ET ANCRES ---
-        # Cas A : Propagation simple (ex: > H >)
-        if len(step) == 1 and not isinstance(step[0], list):
-            item = step[0]
-            if isinstance(item, dict) and 'anchor' in item:
-                self._register_anchor(current_v, item)
-                self._process_steps(current_v, steps[1:])
-            else:
-                v_next = self.new_v()
-                self.edges.append((current_v, v_next, item))
-                self._process_steps(v_next, steps[1:])
-        
-        # Cas B : Éclatements (ex: > (Z > ee) (Z > mumu))
+        # --- RESTE DE LA LOGIQUE AVEC 'particles' au lieu de 'step' ---
+        if len(particles) == 1 and not isinstance(particles[0], list):
+            v_next = self.new_v()
+            self.edges.append((current_v, v_next, particles[0]))
+            self._process_steps(v_next, steps[1:])
         else:
-            for item in step:
+            for item in particles:
                 if isinstance(item, list):
-                    # C'est une sous-cascade. Le départ de la branche est v_decay.
                     v_decay = self.new_v()
-                    
-                    # On extrait la particule parente ET les ancres potentielles
-                    parent_info = item[0]
-                    p_name = "unknown"
-                    for part in parent_info:
-                        if isinstance(part, dict) and 'anchor' in part:
-                            self._register_anchor(v_decay, part)
-                        else:
-                            p_name = part
+                    # On cherche la particule parente dans la cascade
+                    p_name = next((t for t in item[0] if isinstance(t, str)), "unknown")
+                    # On enregistre les ancres présentes dans la définition de la cascade
+                    for t in item[0]:
+                        if isinstance(t, dict) and 'anchor' in t:
+                            self._register_anchor(v_decay, t)
                     
                     self.edges.append((current_v, v_decay, p_name))
                     self._process_steps(v_decay, item[1:])
-                
-                elif isinstance(item, dict) and 'anchor' in item:
-                    # Ancre isolée sur le vertex actuel
-                    self._register_anchor(current_v, item)
-                
                 else:
-                    # Particule finale simple
                     f_node = self.new_f()
                     self.edges.append((current_v, f_node, item))
 

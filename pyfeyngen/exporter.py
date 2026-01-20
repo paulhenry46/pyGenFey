@@ -3,6 +3,20 @@ from .physics import get_info
 def generate_physical_tikz(graph):
     tikz_lines = []
     vertex_usage = {}
+
+    # ÉTAPE PRÉALABLE : On ne compte QUE si la particule est une chaîne (str)
+    path_totals = {}
+    valid_edges = []
+    
+    for edge in graph.edges:
+        src, dst, particle = edge
+        # Si par erreur 'particle' est un dict, on saute cette arête
+        if isinstance(particle, str):
+            valid_edges.append(edge)
+            path_id = tuple(sorted((src, dst)))
+            path_totals[path_id] = path_totals.get(path_id, 0) + 1
+
+    path_current_count = {}
     
     # 1. ÉTAPE PRÉALABLE : Calcul des doublons pour le "bending" (boucles)
     path_totals = {}
@@ -56,7 +70,7 @@ def generate_physical_tikz(graph):
         tikz_lines.append(line)
     
     # Utilisation du layered layout pour une meilleure gestion des cycles d'ancres
-    header = "\\feynmandiagram [layered layout, horizontal=inx1 to fx1] {"
+    header = "\\feynmandiagram [horizontal=inx1 to fx1] {"
     footer = "};"
     return header + "\n" + ",\n".join(tikz_lines) + "\n" + footer
 
