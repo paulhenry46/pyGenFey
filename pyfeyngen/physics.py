@@ -22,8 +22,8 @@ PARTICLES = {
     
     # Bosons
     'Z0':    {'style': 'boson', 'label': 'Z^{0}', 'is_anti': False},
-    'W+':    {'style': 'boson', 'label': 'W^{+}', 'is_anti': False},
-    'W-':    {'style': 'boson', 'label': 'W^{-}', 'is_anti': False},
+    'W+':    {'style': 'charged boson', 'label': 'W^{+}', 'is_anti': False},
+    'W-':    {'style': 'charged boson', 'label': 'W^{-}', 'is_anti': True},
     'gamma': {'style': 'photon', 'label': '\\gamma', 'is_anti': False},
     'g':     {'style': 'gluon', 'label': 'g', 'is_anti': False},
     'H':     {'style': 'scalar', 'label': 'H^{0}', 'is_anti': False}, # Style scalar = ligne tiretée ou pleine

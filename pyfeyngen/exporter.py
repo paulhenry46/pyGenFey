@@ -29,7 +29,7 @@ def generate_physical_tikz(graph):
         label = info['label']
         
         # Logique des flèches pour les antifermions
-        if info['is_anti'] and style == 'fermion':
+        if info['is_anti'] and (style == 'fermion' or style == 'charged boson'):
             # On inverse le sens pour que la flèche pointe vers le vertex (remonte le temps)
             line = fr"  {dst} -- [{style}, edge label=\({label}\)] {src}"
         else:
