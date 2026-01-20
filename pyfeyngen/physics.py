@@ -1,5 +1,5 @@
 # physics.py
-
+from .errors import UnknownParticleError
 PARTICLES = {
     'e-':    {'style': 'fermion', 'label': 'e^{-}', 'is_anti': False},
     'e+':    {'style': 'fermion', 'label': 'e^{+}', 'is_anti': True},
@@ -14,4 +14,6 @@ PARTICLES = {
 
 def get_info(name):
     # Retourne les infos ou un style par défaut si inconnu
-    return PARTICLES.get(name, {'style': 'plain', 'label': name, 'is_anti': False})
+    if name not in PARTICLES:
+        raise UnknownParticleError(f"La particule '{name}' n'est pas définie dans la bibliothèque.")
+    return PARTICLES[name]

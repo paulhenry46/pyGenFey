@@ -1,10 +1,17 @@
 import re
-
+from .errors import InvalidReactionError
 def parse_reaction(reaction_str):
     """
     Transforme une chaîne de réaction en structure de listes imbriquées.
     Exemple: "H > (Z0 > e+ e-) Z0" -> [['H'], [[['Z0'], ['e+', 'e-']], 'Z0']]
     """
+    if not reaction_str.strip():
+        raise InvalidReactionError("La chaîne de réaction est vide.")
+    
+    # Vérification de l'équilibre des parenthèses
+    if reaction_str.count('(') != reaction_str.count(')'):
+        raise InvalidReactionError("Parenthèses non équilibrées dans la réaction.")
+    
     # Nettoyage initial
     s = reaction_str.strip()
     
@@ -61,13 +68,3 @@ def _parse_step(step_str):
             if token:
                 tokens.append(token)
     return tokens
-
-# --- TEST ---
-if __name__ == "__main__":
-    test1 = "e+ e- > Z0 > mu+ mu-"
-    test2 = "H > (Z0 > e+ e-) Z0"
-    test3 = "u ubar > H > (Z0 > e+ e-) (Z0 > mu+ mu-)"
-    
-    for t in [test1, test2, test3]:
-        print(f"Input: {t}")
-        print(f"Output: {parse_reaction(t)}\n")
