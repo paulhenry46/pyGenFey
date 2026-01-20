@@ -1,22 +1,14 @@
 import re
 from .errors import InvalidReactionError
+
 def parse_reaction(reaction_str):
-    """
-    Transforme une chaîne de réaction en structure de listes imbriquées.
-    Exemple: "H > (Z0 > e+ e-) Z0" -> [['H'], [[['Z0'], ['e+', 'e-']], 'Z0']]
-    """
     if not reaction_str.strip():
         raise InvalidReactionError("La chaîne de réaction est vide.")
     
-    # Vérification de l'équilibre des parenthèses
     if reaction_str.count('(') != reaction_str.count(')'):
-        raise InvalidReactionError("Parenthèses non équilibrées dans la réaction.")
+        raise InvalidReactionError("Parenthèses non équilibrées.")
     
-    # Nettoyage initial
     s = reaction_str.strip()
-    
-    # Étape 1 : Séparer par les '>' de premier niveau uniquement
-    # On ne split pas si on est à l'intérieur d'une parenthèse
     steps = []
     current_step = ""
     depth = 0
@@ -31,7 +23,6 @@ def parse_reaction(reaction_str):
             current_step += char
     steps.append(current_step.strip())
     
-    # Étape 2 : Analyser chaque étape pour extraire les particules ou les groupes
     final_structure = []
     for step in steps:
         final_structure.append(_parse_step(step))
@@ -39,7 +30,7 @@ def parse_reaction(reaction_str):
     return final_structure
 
 def _parse_step(step_str):
-    """Analyse une étape pour séparer les particules, blocs ( ) et boucles [ ]"""
+    """Analyse une étape pour séparer les particules, blocs ( ), boucles [ ] et ancres @"""
     tokens = []
     i = 0
     while i < len(step_str):
@@ -47,7 +38,7 @@ def _parse_step(step_str):
             i += 1
             continue
             
-        # GESTION DES PARENTHÈSES (Branchements)
+        # 1. GESTION DES PARENTHÈSES (Branchements)
         if step_str[i] == '(':
             start = i + 1
             depth = 1
@@ -58,7 +49,7 @@ def _parse_step(step_str):
                 i += 1
             tokens.append(parse_reaction(step_str[start:i-1]))
 
-        # GESTION DES CROCHETS (Boucles)
+        # 2. GESTION DES CROCHETS (Boucles simples)
         elif step_str[i] == '[':
             start = i + 1
             depth = 1
@@ -67,14 +58,25 @@ def _parse_step(step_str):
                 if step_str[i] == '[': depth += 1
                 elif step_str[i] == ']': depth -= 1
                 i += 1
-            # On extrait les particules à l'intérieur du crochet
             loop_content = step_str[start:i-1].split()
             tokens.append({'loop': loop_content})
 
-        else:
-            # PARTICULES SIMPLES
-            start = i
+        # 3. GESTION DES ANCRES (@nom ou @nom:particule)
+        elif step_str[i] == '@':
+            start = i + 1
             while i < len(step_str) and not step_str[i].isspace() and step_str[i] not in '([':
+                i += 1
+            anchor_text = step_str[start:i]
+            if ':' in anchor_text:
+                name, part = anchor_text.split(':', 1)
+                tokens.append({'anchor': name, 'particle': part})
+            else:
+                tokens.append({'anchor': anchor_text, 'particle': None})
+
+        # 4. PARTICULES SIMPLES
+        else:
+            start = i
+            while i < len(step_str) and not step_str[i].isspace() and step_str[i] not in '([@':
                 i += 1
             token = step_str[start:i]
             if token:

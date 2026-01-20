@@ -4,67 +4,74 @@ def generate_physical_tikz(graph):
     tikz_lines = []
     vertex_usage = {}
     
-    # ÉTAPE PRÉALABLE : Compter combien de fois chaque chemin est utilisé
+    # 1. ÉTAPE PRÉALABLE : Calcul des doublons pour le "bending" (boucles)
     path_totals = {}
     for src, dst, _ in graph.edges:
         path_id = tuple(sorted((src, dst)))
         path_totals[path_id] = path_totals.get(path_id, 0) + 1
 
-    # ÉTAPE DE GÉNÉRATION
-    path_current_count = {} # Pour savoir si on est à la 1ère ou 2ème ligne du chemin
+    path_current_count = {}
 
+    # 2. GÉNÉRATION DES LIGNES
     for src, dst, particle in graph.edges:
         info = get_info(particle)
         style = info['style']
         label = info['label']
         path_id = tuple(sorted((src, dst)))
         
-        # Gestion du Bending Symétrique
+        # --- Gestion du Bending Symétrique ---
         bend_style = ""
-        total_lines = path_totals[path_id]
-        
-        if total_lines > 1:
-            # On initialise le compteur pour ce chemin si besoin
+        if path_totals[path_id] > 1:
             current = path_current_count.get(path_id, 0)
-            # La 1ère ligne va à gauche, la 2ème à droite
             side_bend = "left" if current % 2 == 0 else "right"
 
+            # Correction d'orientation pour les antifermions (inversion src/dst)
             if info['is_anti'] and style == 'fermion':
                 side_bend = "right" if side_bend == "left" else "left"
 
             bend_style = f", bend {side_bend}=45"
             path_current_count[path_id] = current + 1
         
-        # Gestion du Label Side (Prime)
+        # --- Gestion du Label Side (Prime) ---
         count_usage = vertex_usage.get(src, 0)
         label_side = "'" if count_usage % 2 != 0 else "" 
         vertex_usage[src] = count_usage + 1
         
-        # Construction de la ligne
+        # --- Sécurité sur le Label ---
+        # Si la particule n'a pas de label (ex: lien d'ancre pur), on n'affiche rien
+        label_cmd = fr"edge label{label_side}=\({label}\)" if label else ""
+        
+        # --- Assemblage de la ligne ---
+        options = [style]
+        if bend_style: options.append(bend_style.lstrip(", "))
+        if label_cmd: options.append(label_cmd)
+        
+        options_str = ", ".join(options)
+
         if info['is_anti'] and style == 'fermion':
-            line = fr"  {dst} -- [{style}{bend_style}, edge label{label_side}=\({label}\)] {src}"
+            line = fr"  {dst} -- [{options_str}] {src}"
         else:
-            line = fr"  {src} -- [{style}{bend_style}, edge label{label_side}=\({label}\)] {dst}"
+            line = fr"  {src} -- [{options_str}] {dst}"
             
         tikz_lines.append(line)
     
-    header = "\\feynmandiagram [horizontal=inx1 to fx1] {"
+    # Utilisation du layered layout pour une meilleure gestion des cycles d'ancres
+    header = "\\feynmandiagram [layered layout, horizontal=inx1 to fx1] {"
     footer = "};"
     return header + "\n" + ",\n".join(tikz_lines) + "\n" + footer
 
 if __name__ == "__main__":
-    from parser import parse_reaction
-    from layout import FeynmanGraph
-    reactions = ['u ubar > H > (Z0 > e+ e-) (Z0 > mu+ mu-)', 'u ubar > H > (Z0 > e+ e-) Z0', 'e+ e- > Z0 > mu+ mu-']
+    from .parser import parse_reaction
+    from .layout import FeynmanGraph
+    
+    # Test avec une réaction à ancre (Échange de photon entre deux branches)
+    reactions = [
+        'u ubar > H > (Z0 @link > e+ e-) (Z0 @link > mu+ mu-)',
+        'e- > @box:gamma e- > @box'
+    ]
+    
     for reaction in reactions:
-
-        # 1. Analyse
+        print(f"\n--- Test: {reaction} ---")
         structure = parse_reaction(reaction)
-        
-        # 2. Topologie
         graph = FeynmanGraph(structure)
-        
-        # 3. Code TikZ
-        tikz_final = generate_physical_tikz(graph)
-        
-        print(tikz_final)
+        print(generate_physical_tikz(graph))
