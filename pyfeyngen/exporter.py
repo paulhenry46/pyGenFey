@@ -1,11 +1,16 @@
 from .physics import get_info
 
+from .physics import get_info
+
+from .physics import get_info
+
 def generate_physical_tikz(graph):
     tikz_lines = []
     vertex_usage = {}
+    # Ensemble pour suivre les vertex déjà déclarés avec un style
+    styled_vertices = set()
 
     # 1. FILTRAGE ET COMPTAGE PRÉALABLE
-    # On identifie les chemins (src, dst) empruntés par plusieurs particules
     path_totals = {}
     valid_edges = []
     for edge in graph.edges:
@@ -24,61 +29,56 @@ def generate_physical_tikz(graph):
         label = info['label']
         path_id = tuple(sorted((src, dst)))
         
-        # --- Gestion du Multi-Bending (Répartition dynamique) ---
+        # --- Gestion des styles de vertex (Injection unique) ---
+        src_attr = ""
+        if src in graph.vertex_styles and src not in styled_vertices:
+            src_attr = f"[{graph.vertex_styles[src]}]"
+            styled_vertices.add(src)
+            
+        dst_attr = ""
+        if dst in graph.vertex_styles and dst not in styled_vertices:
+            dst_attr = f"[{graph.vertex_styles[dst]}]"
+            styled_vertices.add(dst)
+        
+        # --- Gestion du Multi-Bending ---
         bend_style = ""
         total_lines = path_totals[path_id]
-        
         if total_lines > 1:
             idx = path_current_count.get(path_id, 0)
             path_current_count[path_id] = idx + 1
-            
-            # On définit l'amplitude maximale de la "bulle" (ex: 50 degrés)
             max_bend = 50 
-            
-            # Formule de répartition linéaire :
-            # Pour 2 lignes : -50, 50
-            # Pour 3 lignes : -50, 0, 50
-            # Pour 4 lignes : -50, -16, 16, 50
             step = (max_bend * 2) / (total_lines - 1)
             angle = -max_bend + (step * idx)
-            
-            # Inversion pour les antifermions pour que la flèche suive la courbure
-            if info['is_anti'] and style == 'fermion':
-                angle = -angle
-            
-            # Application du style TikZ
-            if abs(angle) > 0.1:  # On ignore les angles proches de 0 (ligne droite)
+            if info['is_anti'] and style == 'fermion': angle = -angle
+            if abs(angle) > 0.1:
                 side = "left" if angle > 0 else "right"
                 bend_style = f"bend {side}={abs(int(angle))}"
         
-        # --- Gestion du Label Side (Prime) ---
-        # Alterne le côté du label si le vertex est très utilisé
+        # --- Gestion du Label Side ---
         count_usage = vertex_usage.get(src, 0)
         label_side = "'" if count_usage % 2 != 0 else "" 
         vertex_usage[src] = count_usage + 1
         
         # --- Construction des options de l'arête ---
         label_cmd = fr"edge label{label_side}=\({label}\)" if label else ""
-        
         options = [style]
         if bend_style: options.append(bend_style)
         if label_cmd: options.append(label_cmd)
-        
         options_str = ", ".join(options)
 
-        # --- Assemblage de la commande (Gestion du flux des fermions) ---
+        # --- Assemblage final (Syntaxe vertex[style] unique) ---
         if info['is_anti'] and style == 'fermion':
-            line = fr"  {dst} -- [{options_str}] {src}"
+            line = fr"  {dst}{dst_attr} -- [{options_str}] {src}{src_attr}"
         else:
-            line = fr"  {src} -- [{options_str}] {dst}"
+            line = fr"  {src}{src_attr} -- [{options_str}] {dst}{dst_attr}"
             
         tikz_lines.append(line)
     
-    # Header utilisant layered layout pour gérer les racines multiples et les cycles
     header = "\\feynmandiagram [layered layout, horizontal=inx1 to fx1] {"
     footer = "};"
     
     return header + "\n" + ",\n".join(tikz_lines) + "\n" + footer
+
 if __name__ == "__main__":
     from .parser import parse_reaction
     from .layout import FeynmanGraph

@@ -32,5 +32,6 @@ PARTICLES = {
 def get_info(name):
     # Retourne les infos ou un style par défaut si inconnu
     if name not in PARTICLES:
-        raise UnknownParticleError(f"La particule '{name}' n'est pas définie dans la bibliothèque.")
+        #raise UnknownParticleError(f"La particule '{name}' n'est pas définie dans la bibliothèque.")
+        return {'style': 'scalar', 'label': name, 'is_anti': False}
     return PARTICLES[name]
