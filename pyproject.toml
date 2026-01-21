@@ -1,0 +1,30 @@
+[project]
+name = "pyfeyngen"
+version = "0.1.0"
+description = "A Python library to convert particle physics reaction strings into LaTeX TikZ-Feynman diagrams."
+authors = [
+    { name = "Saux Paulhenry & Contributors" }
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["feynman", "tikz", "physics", "diagram", "latex"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics"
+]
+dependencies = []
+
+[project.urls]
+"Homepage" = "https://github.com/paulhenry46/pyfeyngen"
+"Bug Tracker" = "https://github.com/paulhenry46/pyfeyngen/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

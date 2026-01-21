@@ -1,4 +1,3 @@
-import re
 from .errors import InvalidReactionError
 
 def parse_reaction(reaction_str):
