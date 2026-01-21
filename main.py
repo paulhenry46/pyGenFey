@@ -15,13 +15,14 @@ reactions = [
     'e+ > (e- > @A{blob} > e-) (e- > @A > e-)',
     '(e- > @A > e-) (e- > @A > e-)',
     'e+ e- > [gamma Z0 H] > mu+ mu-',
-    'H > (Z0 @link > e+ e-) (Z0 @link > mu+ mu-)',
-    'n > @v1{blob} > p e- nubar_e'
+    'H > (Z0  > @link e+ e-) (Z0  > @link mu+ mu-)',
+    'n > @v1{blob} > p e- nubar_e',
+    'e- > @box:gamma e- > @box'
 ]
 
 for r in reactions:
     print(f"Testing: {r}")
-    result = pyfeyngen.quick_render(r)
+    result = pyfeyngen.quick_render(r, True)
     print(result)
     if result.startswith("%"):
         print(f"  ERROR: {result[2:]}")

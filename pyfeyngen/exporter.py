@@ -78,19 +78,3 @@ def generate_physical_tikz(graph):
     footer = "};"
     
     return header + "\n" + ",\n".join(tikz_lines) + "\n" + footer
-
-if __name__ == "__main__":
-    from .parser import parse_reaction
-    from .layout import FeynmanGraph
-    
-    # Test avec une réaction à ancre (Échange de photon entre deux branches)
-    reactions = [
-        'u ubar > H > (Z0 @link > e+ e-) (Z0 @link > mu+ mu-)',
-        'e- > @box:gamma e- > @box'
-    ]
-    
-    for reaction in reactions:
-        print(f"\n--- Test: {reaction} ---")
-        structure = parse_reaction(reaction)
-        graph = FeynmanGraph(structure)
-        print(generate_physical_tikz(graph))

@@ -1,3 +1,5 @@
+from .logger import logger
+
 class FeynmanGraph:
     def __init__(self, structure):
         self.nodes = []      
@@ -144,33 +146,3 @@ class FeynmanGraph:
                     dst = points[i+1]['vertex']
                     p_name = points[i]['particle'] or "gamma"
                     self.edges.append((src, dst, p_name))
-
-
-
-if __name__ == "__main__":
-    # Simulation d'une structure parsée complexe : 
-    # u ubar > H > (Z0 > e+ e-) (Z0 > mu+ mu-)
-    mock_structure = [
-        ['u', 'ubar'],                                     # Entrées
-        ['H'],                                             # Étape 1
-        [                                                  # Étape 2 (Branchement)
-            [['Z0'], ['e+', 'e-']],                        # Cascade 1
-            [['Z0'], ['mu+', 'mu-']]                       # Cascade 2
-        ]
-    ]
-
-    mock_structure =  [['H'], [[['Z0'], ['e+', 'e-']], 'Z0']]
-    mock_structure = [['e+', 'e-'], ['Z0'], ['mu+', 'mu-']]
-
-    print("--- TEST DU GENERATEUR DE GRAPHE ---")
-    graph = FeynmanGraph(mock_structure)
-
-    print(f"\nNoeuds créés : {graph.v_count} vertex, {graph.in_count} entrées, {graph.f_count} sorties.")
-    
-    print("\nListe des connexions (Edges) :")
-    print(f"{'Source':<10} | {'Cible':<10} | {'Particule':<10}")
-    print("-" * 35)
-    for src, dst, particle in graph.edges:
-        print(f"{src:<10} | {dst:<10} | {particle:<10}")
-
-    
