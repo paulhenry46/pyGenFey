@@ -43,7 +43,7 @@ def get_info(name, user_dict=None):
     elif name in PARTICLES:
         return PARTICLES[name]
     else:
-        logger.warning(f"La particule '{name}' n'est pas définie dans la bibliothèque.")
+        logger.debug(f"La particule '{name}' n'est pas définie dans la bibliothèque.")
 
         match = re.match(r"^([a-zA-Z]+?)(bar|\+|\-|0)?(_[a-zA-Z0-9]+)?$", name)
 
