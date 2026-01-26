@@ -27,5 +27,8 @@ for r in reactions:
     print(result)
     if result.startswith("%"):
         print(f"  ERROR: {result[2:]}")
-    else:
-        print("  OK: Code généré avec succès.")
+
+for r in reactions:
+    print(f"Testing: {r}")
+    result = pyfeyngen.quick_geometry(r)
+    print(result)
