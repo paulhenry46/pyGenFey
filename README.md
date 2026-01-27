@@ -1,4 +1,10 @@
-# pyfeyngen Python Library Documentation
+<br />
+<div align="center">
+  <a href="https://github.com/paulhenry46/pyfeyngen">
+    <img src="docs/logo.png" alt="Logo" width="80" >
+  </a>
+
+  <h3 align="center">Pyfeyngen</h3>
 
 **pyfeyngen** is a high-level Python library designed to transform a natural, string-based particle physics syntax into LaTeX TikZ-Feynman code. It handles complex topologies, including loops, branches, and effective field theory interactions (blobs).
 
