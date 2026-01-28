@@ -1,7 +1,3 @@
-
-# pyfeyngen/__init__.py
-# Main initialization file for the pyfeyngen package.
-
 from .parser import parse_reaction
 from .layout import FeynmanGraph
 from .exporter import generate_physical_tikz
@@ -10,11 +6,19 @@ from .logger import setup_logging, logger
 from .layout_engine import LayeredLayout
 import logging
 
-__version__ = "1.0.0"
+__version__ = "0.1.2"
 __author__ = "Saux Paulhenry & Contributors"
 
 def quick_render(reaction_string, user_dict=None, debug=False):
-
+    """
+    Parse a reaction string, build the Feynman graph, and generate TikZ code.
+    Args:
+        reaction_string (str): The reaction string to parse and render.
+        user_dict (dict, optional): Custom particle info dictionary.
+        debug (bool): If True, enables debug logging.
+    Returns:
+        str: TikZ code for the Feynman diagram, or a LaTeX comment on error.
+    """
     # Enable debug logging if requested
     if debug:
         setup_logging(True)
@@ -48,29 +52,32 @@ def quick_render(reaction_string, user_dict=None, debug=False):
     
 def quick_geometry(reaction_string, debug=False):
     """
-    Parse une réaction et retourne les coordonnées et métadonnées 
-    sous forme de dictionnaire (convertible en JSON).
+    Parse a reaction string and return node coordinates and metadata as a dictionary.
+    Args:
+        reaction_string (str): The reaction string to parse and layout.
+        debug (bool): If True, enables debug logging.
+    Returns:
+        dict: Geometry data for nodes and edges, or error information.
     """
-    # Active les logs si besoin
+    # Enable debug logging if requested
     if debug:
         setup_logging(True)
-        
+
     try:
-        # 1. Pipeline classique : Parser -> Graphe
+        # 1. Standard pipeline: Parse -> Graph
         structure = parse_reaction(reaction_string)
         graph = FeynmanGraph(structure)
-        
-        # 2. Pipeline Géométrique : Engine de Layout
-        # On peut ajuster l'espacement ici si nécessaire
+
+        # 2. Geometry pipeline: Layout engine
         engine = LayeredLayout(graph, x_spacing=150, y_spacing=100)
-        
-        # 3. Calcul et récupération des données pour Inkscape
+
+        # 3. Compute and retrieve geometry data for Inkscape
         geometry_data = engine.get_inkscape_data()
-        
+
         if debug:
             logger = logging.getLogger("pyfeyngen")
             logger.debug(f"Geometry calculated for {len(geometry_data['nodes'])} nodes.")
-            
+
         return geometry_data
 
     except Exception as e:
@@ -78,5 +85,10 @@ def quick_geometry(reaction_string, debug=False):
             print(f"Error in quick_geometry: {e}")
         return {"error": str(e)}
 
-# Define what is accessible with 'from pyfeyngen import *'
-__all__ = ["parse_reaction", "FeynmanGraph", "generate_physical_tikz", "quick_render", "quick_geometry"]
+__all__ = [
+    "parse_reaction",
+    "FeynmanGraph",
+    "generate_physical_tikz",
+    "quick_render",
+    "quick_geometry"
+]
